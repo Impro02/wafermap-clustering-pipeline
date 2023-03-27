@@ -3,6 +3,7 @@ import time
 import os
 from pathlib import Path
 from logging import Logger
+import threading
 
 # MODELS
 from models.config import Config
@@ -18,12 +19,33 @@ class PipeLine:
     def __init__(self, config: Config, logger: Logger) -> None:
         self.config = config
         self.logger = logger
+        self.running = False
+        self.thread = None
         self.clustering = Clustering(config=self.config, logger=self.logger)
 
-    def start(self):
-        while True:
-            time.sleep(self.config.time_sleep)
+    @property
+    def is_running(self):
+        return self.running
 
+    def stop(self):
+        self.running = False
+        if self.thread is not None:
+            self.thread.join()
+
+        self.logger.info("Pipeline ended...")
+
+    def start(self, callback=None):
+        if self.is_running:
+            self.logger.warning("Pipeline is already running.")
+        else:
+            self.logger.info("Pipeline started...")
+            self.running = True
+
+            self.thread = threading.Thread(target=self._process, args=(callback,))
+            self.thread.start()
+
+    def _process(self, callback):
+        while self.running:
             klarf_paths, nbr_klarfs = file.get_files(
                 path=self.config.path.input, sort_by_modification_date=True
             )
@@ -47,16 +69,21 @@ class PipeLine:
 
                             if not len(results) == 0 and os.path.exists(klarf_path):
                                 os.remove(klarf_path)
+
+                                if callback is not None:
+                                    callback(results)
                             else:
                                 self.logger.error(
                                     msg=f"Unable to remove {klarf=}",
                                 )
 
                     except Exception as ex:
-                        file.move(
-                            src=klarf_path,
-                            dst=os.path.join(self.config.path.error, klarf),
-                        )
+
+                        if os.path.exists(klarf_path):
+                            file.move(
+                                src=klarf_path,
+                                dest=os.path.join(self.config.path.error, klarf),
+                            )
 
                         message_error = mailing.send_mail_error(
                             klarf=klarf,
@@ -68,3 +95,6 @@ class PipeLine:
                             msg=message_error,
                             exc_info=ex,
                         )
+
+                    # Add a sleep here to avoid CPU hogging
+                    time.sleep(0.1)

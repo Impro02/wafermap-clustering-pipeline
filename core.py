@@ -1,7 +1,7 @@
 # MODULES
 from pathlib import Path
 
-#WAFERMAP-CLUSTERING
+# WAFERMAP-CLUSTERING
 from wafermap_clustering.configs.logging_config import setup_logger
 
 # CONFIGS
