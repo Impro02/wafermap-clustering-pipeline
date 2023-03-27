@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 
 # MODELS
-from models.config import Config, MailingConfig, PathConfig
+from models.config import Config, MailingConfig, PathConfig, MultiProcessingConfig
 
 # WAFERMAP-CLUSTERING
 from wafermap_clustering.models.config import ClusteringConfig
@@ -21,7 +21,8 @@ def load_config(filepath: Path):
                 root_config: dict = json.load(json_data_file)
                 clustering_config = root_config.get("clustering", {})
                 mailing_config = root_config.get("mailing", {})
-                path_config = root_config.get("mailing", {})
+                path_config = {}
+                multi_processing_config = root_config.get("thread", {})
 
                 platform_config = root_config.get("platforms", [])
                 if platform_system in platform_config:
@@ -49,5 +50,11 @@ def load_config(filepath: Path):
             port=mailing_config.get("port", None),
             sender=mailing_config.get("sender", None),
             receiver=mailing_config.get("receiver", None),
+        ),
+        multi_processing=MultiProcessingConfig(
+            use_multi_processing=multi_processing_config.get(
+                "use_multi_processing", False
+            ),
+            max_workers=multi_processing_config.get("num_threads", 3),
         ),
     )

@@ -1,9 +1,10 @@
 # MODULES
+import threading
 import time
 import os
-from pathlib import Path
 from logging import Logger
-from threading import Thread
+import concurrent.futures
+
 
 # MODELS
 from models.config import Config
@@ -20,7 +21,6 @@ class PipeLine:
         self.config = config
         self.logger = logger
         self.running = False
-        self.thread = None
         self.clustering = Clustering(config=self.config, logger=self.logger)
 
     @property
@@ -29,10 +29,10 @@ class PipeLine:
 
     def stop(self):
         self.running = False
-        if self.thread is not None:
-            self.thread.join()
 
-        self.logger.info("Pipeline ended...")
+        if self.process_thread is not None:
+            self.process_thread.join()
+            self.logger.info("Pipeline ended...")
 
     def start(self, callback=None):
         if self.is_running:
@@ -41,10 +41,17 @@ class PipeLine:
             self.logger.info("Pipeline started...")
             self.running = True
 
-            self.thread = Thread(target=self._process, args=(callback,))
-            self.thread.start()
+            self.process_thread = threading.Thread(
+                target=self._process,
+                kwargs={
+                    "callback": callback,
+                    "multi_processing": self.config.multi_processing.use_multi_processing,
+                    "max_workers": self.config.multi_processing.max_workers,
+                },
+            )
+            self.process_thread.start()
 
-    def _process(self, callback):
+    def _process(self, callback, multi_processing: bool = False, max_workers=None):
         while self.running:
             klarf_paths, nbr_klarfs = file.get_files(
                 path=self.config.path.input, sort_by_modification_date=True
@@ -55,53 +62,69 @@ class PipeLine:
                 time.sleep(0.1)
                 continue
 
-            for klarf_path in klarf_paths:
-                klarf = os.path.basename(klarf_path)
-                klarf_name, klarf_extension = os.path.splitext(klarf)
+            tic = time.time()
 
-                try:
-                    if not file.check_file_size(klarf_path):
-                        self.logger.warning(
-                            f"Timeout exceeded to process {klarf_path=}"
+            if multi_processing:
+                with concurrent.futures.ProcessPoolExecutor(
+                    max_workers=max_workers
+                ) as executor:
+                    futures = [
+                        executor.submit(
+                            self._process_klarf, klarf_path, self.config.path.output
                         )
+                        for klarf_path in klarf_paths
+                    ]
 
-                        continue
-
-                    output_path = (
-                        Path(self.config.path.output)
-                        / f"{klarf_name}_clustered{klarf_extension}"
-                    )
-
-                    results = self.clustering.apply(
-                        klarf_path=klarf_path,
-                        output_path=output_path,
-                    )
-
-                    if not len(results) == 0 and os.path.exists(klarf_path):
-                        os.remove(klarf_path)
-
-                        if callback is not None:
+                    for future in concurrent.futures.as_completed(futures):
+                        results = future.result()
+                        if results and callback is not None:
                             callback(results)
-                    else:
-                        self.logger.error(
-                            msg=f"Unable to remove {klarf=}",
-                        )
-
-                except Exception as ex:
-
-                    if os.path.exists(klarf_path):
-                        file.move(
-                            src=klarf_path,
-                            dest=os.path.join(self.config.path.error, klarf),
-                        )
-
-                    message_error = mailing.send_mail_error(
-                        klarf=klarf,
-                        error_path=self.config.path.error,
-                        config=self.config.mailing,
+            else:
+                for klarf_path in klarf_paths:
+                    results = self._process_klarf(
+                        klarf_path=klarf_path, output_dir=self.config.path.output
                     )
 
-                    self.logger.critical(
-                        msg=message_error,
-                        exc_info=ex,
-                    )
+                    if results and callback is not None:
+                        callback(results)
+
+            self.logger.info(f"Batch executed in {time.time() - tic}s")
+
+    def _process_klarf(self, klarf_path, output_dir):
+        klarf = os.path.basename(klarf_path)
+        klarf_name, klarf_extension = os.path.splitext(klarf)
+
+        try:
+            if not file.check_file_size(klarf_path):
+                self.logger.warning(f"Timeout exceeded to process {klarf_path=}")
+                return None
+
+            output_path = os.path.join(
+                output_dir, f"{klarf_name}_clustered{klarf_extension}"
+            )
+
+            results = self.clustering.apply(
+                klarf_path=klarf_path, output_path=output_path
+            )
+
+            if not len(results) == 0 and os.path.exists(klarf_path):
+                os.remove(klarf_path)
+
+                return results
+
+            else:
+                self.logger.error(msg=f"Unable to remove {klarf=}")
+
+        except Exception as ex:
+            if os.path.exists(klarf_path):
+                file.move(
+                    src=klarf_path, dest=os.path.join(self.config.path.error, klarf)
+                )
+
+            message_error = mailing.send_mail_error(
+                klarf=klarf,
+                error_path=self.config.path.error,
+                config=self.config.mailing,
+            )
+
+            self.logger.critical(msg=message_error, exc_info=ex)
