@@ -1,4 +1,5 @@
 # MODULES
+from pathlib import Path
 import threading
 import time
 import os
@@ -27,31 +28,35 @@ class PipeLine:
     def is_running(self):
         return self.running
 
-    def stop(self):
-        self.running = False
-
-        if self.process_thread is not None:
-            self.process_thread.join()
-            self.logger.info("Pipeline ended...")
-
     def start(self, callback=None):
         if self.is_running:
-            self.logger.warning("Pipeline is already running.")
-        else:
-            self.logger.info("Pipeline started...")
-            self.running = True
+            return self.logger.warning("Pipeline is already running.")
 
-            self.process_thread = threading.Thread(
-                target=self._process,
-                kwargs={
-                    "callback": callback,
-                    "multi_processing": self.config.multi_processing.use_multi_processing,
-                    "max_workers": self.config.multi_processing.max_workers,
-                },
-            )
-            self.process_thread.start()
+        self.logger.info("Pipeline started...")
+        self.running = True
 
-    def _process(self, callback, multi_processing: bool = False, max_workers=None):
+        process_thread = threading.Thread(
+            target=self._process,
+            kwargs={
+                "callback": callback,
+                "use_multi_processing": self.config.multi_processing.use_multi_processing,
+                "max_workers": self.config.multi_processing.max_workers,
+                "num_files": self.config.multi_processing.num_files,
+            },
+        )
+        process_thread.start()
+
+        process_thread.join()
+
+        self.logger.info("Pipeline ended...")
+
+    def _process(
+        self,
+        callback,
+        use_multi_processing: bool = False,
+        max_workers=None,
+        num_files: int = 10,
+    ):
         while self.running:
             klarf_paths, nbr_klarfs = file.get_files(
                 path=self.config.path.input, sort_by_modification_date=True
@@ -64,6 +69,7 @@ class PipeLine:
 
             tic = time.time()
 
+            multi_processing = use_multi_processing and nbr_klarfs > num_files
             if multi_processing:
                 with concurrent.futures.ProcessPoolExecutor(
                     max_workers=max_workers
@@ -88,33 +94,36 @@ class PipeLine:
                     if results and callback is not None:
                         callback(results)
 
-            self.logger.info(f"Batch executed in {time.time() - tic}s")
+            self.logger.info(
+                f"Batch of {nbr_klarfs} klarf(s) executed in {time.time() - tic}s [{multi_processing=}]"
+            )
 
-    def _process_klarf(self, klarf_path, output_dir):
+    def _process_klarf(self, klarf_path: Path, output_dir: Path):
         klarf = os.path.basename(klarf_path)
         klarf_name, klarf_extension = os.path.splitext(klarf)
 
+        output_path = os.path.join(
+            output_dir, f"{klarf_name}_clustered{klarf_extension}"
+        )
+
         try:
-            if not file.check_file_size(klarf_path):
-                self.logger.warning(f"Timeout exceeded to process {klarf_path=}")
-                return None
+            if file.check_file_size(klarf_path, timeout=self.config.time_out):
+                results = self.clustering.apply(
+                    klarf_path=klarf_path, output_path=output_path
+                )
 
-            output_path = os.path.join(
-                output_dir, f"{klarf_name}_clustered{klarf_extension}"
-            )
+                if len(results) == 0 or not os.path.exists(klarf_path):
+                    return self.logger.error(msg=f"Unable to remove {klarf=}")
 
-            results = self.clustering.apply(
-                klarf_path=klarf_path, output_path=output_path
-            )
-
-            if not len(results) == 0 and os.path.exists(klarf_path):
                 os.remove(klarf_path)
 
                 return results
 
-            else:
-                self.logger.error(msg=f"Unable to remove {klarf=}")
-
+        except TimeoutError as ex:
+            self.logger.warning(
+                msg=f"Timeout exceeded while cheking size of {klarf_path=}",
+                exc_info=ex,
+            )
         except Exception as ex:
             if os.path.exists(klarf_path):
                 file.move(

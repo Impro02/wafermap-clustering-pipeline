@@ -19,14 +19,17 @@ class PathConfig:
     output: str
     error: str
 
+
 @dataclass
 class MultiProcessingConfig:
     use_multi_processing: bool
     max_workers: int
+    num_files: int
+
 
 @dataclass
 class Config(ClusteringConfig):
-    time_sleep: int
+    time_out: int
     path: PathConfig
     mailing: MailingConfig
     multi_processing: MultiProcessingConfig

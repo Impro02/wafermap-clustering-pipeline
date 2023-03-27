@@ -22,7 +22,9 @@ def check_file_size(path: Path, timeout: float = 10.0):
         new_size = os.path.getsize(path)
 
         if time.time() - tic > timeout:
-            return False
+            raise TimeoutError(
+                f"Timeout exceeded to wait until the file size stops changing {path=}"
+            )
 
         if new_size == size:
             break

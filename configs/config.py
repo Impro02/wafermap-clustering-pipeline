@@ -22,7 +22,7 @@ def load_config(filepath: Path):
                 clustering_config = root_config.get("clustering", {})
                 mailing_config = root_config.get("mailing", {})
                 path_config = {}
-                multi_processing_config = root_config.get("thread", {})
+                multi_processing_config = root_config.get("multi_processing", {})
 
                 platform_config = root_config.get("platforms", [])
                 if platform_system in platform_config:
@@ -33,7 +33,7 @@ def load_config(filepath: Path):
                 exit()
 
     return Config(
-        time_sleep=root_config.get("time_sleep", 5),
+        time_out=root_config.get("time_out", 5),
         platform=platform_system,
         attribute=root_config.get("attribute", "CLUSTER_ID"),
         path=PathConfig(
@@ -56,5 +56,6 @@ def load_config(filepath: Path):
                 "use_multi_processing", False
             ),
             max_workers=multi_processing_config.get("num_threads", 3),
+            num_files=multi_processing_config.get("num_files", 5),
         ),
     )
