@@ -55,7 +55,7 @@ def load_config(filepath: Path):
             use_multi_processing=multi_processing_config.get(
                 "use_multi_processing", False
             ),
-            max_workers=multi_processing_config.get("num_threads", 3),
+            max_workers=multi_processing_config.get("max_workers", 3),
             num_files=multi_processing_config.get("num_files", 5),
         ),
     )

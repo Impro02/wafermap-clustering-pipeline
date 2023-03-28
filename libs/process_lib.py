@@ -3,7 +3,6 @@ from pathlib import Path
 from logging import Logger
 import time
 import os
-import concurrent.futures
 import multiprocessing as mp
 
 # MODELS
@@ -55,6 +54,14 @@ class Process:
                     )
                     pool.close()
                     pool.join()
+
+                    [
+                        self.logger.info(
+                            msg=f"({repr(clustering)}) was processed in {clustering.processing_timestamp} [clusters={clustering.clusters}]"
+                        )
+                        for clustering_result in results
+                        for clustering in clustering_result
+                    ]
 
             else:
                 for klarf_path in klarf_paths:
