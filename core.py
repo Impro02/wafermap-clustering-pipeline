@@ -1,17 +1,15 @@
 # MODULES
 from pathlib import Path
 
-# WAFERMAP-CLUSTERING
-from wafermap_clustering.configs.logging_config import setup_logger
-
 # CONFIGS
 from configs.config import load_config
+from configs.logging import setup_logger
 
 
 CONFIGS_CLUSTERING_PATH = Path("configs") / "config.json"
 CONFIGS = load_config(filepath=CONFIGS_CLUSTERING_PATH)
 
-LOGGER = setup_logger(CONFIGS.platform)
+LOGGER = setup_logger(name="clustering")
 
 if __name__ == "__main__":
     # LIBS
