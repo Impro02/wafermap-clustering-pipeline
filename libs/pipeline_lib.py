@@ -1,6 +1,5 @@
 # MODULES
 from pathlib import Path
-import threading
 import time
 import os
 from logging import Logger
@@ -28,31 +27,20 @@ class PipeLine:
     def is_running(self):
         return self.running
 
-    def start(self, callback=None):
+    def start(self):
         if self.is_running:
             return self.logger.warning("Pipeline is already running.")
 
-        self.logger.info("Pipeline started...")
         self.running = True
-
-        process_thread = threading.Thread(
-            target=self._process,
-            kwargs={
-                "callback": callback,
-                "use_multi_processing": self.config.multi_processing.use_multi_processing,
-                "max_workers": self.config.multi_processing.max_workers,
-                "num_files": self.config.multi_processing.num_files,
-            },
+        self.process_klarfs(
+            use_multi_processing=self.config.multi_processing.use_multi_processing,
+            max_workers=self.config.multi_processing.max_workers,
+            num_files=self.config.multi_processing.num_files,
         )
-        process_thread.start()
+        self.logger.info("Pipeline started.")
 
-        process_thread.join()
-
-        self.logger.info("Pipeline ended...")
-
-    def _process(
+    def process_klarfs(
         self,
-        callback,
         use_multi_processing: bool = False,
         max_workers=None,
         num_files: int = 10,
@@ -83,16 +71,12 @@ class PipeLine:
 
                     for future in concurrent.futures.as_completed(futures):
                         results = future.result()
-                        if results and callback is not None:
-                            callback(results)
+
             else:
                 for klarf_path in klarf_paths:
                     results = self._process_klarf(
                         klarf_path=klarf_path, output_dir=self.config.path.output
                     )
-
-                    if results and callback is not None:
-                        callback(results)
 
             self.logger.info(
                 f"Batch of {nbr_klarfs} klarf(s) executed in {time.time() - tic}s [{multi_processing=}]"
