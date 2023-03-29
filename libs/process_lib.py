@@ -36,14 +36,14 @@ class Process:
 
             if nbr_klarfs == 0:
                 # Add a sleep here to avoid CPU hogging
-                time.sleep(0.1)
+                time.sleep(self.config.cpu_hog_tempo)
                 continue
 
             tic = time.time()
 
             multi_processing = (
                 self.config.multi_processing.use_multi_processing
-                and nbr_klarfs > self.config.multi_processing.num_files
+                and nbr_klarfs >= self.config.multi_processing.num_files
             )
             if multi_processing:
                 max_workers = min(
@@ -93,7 +93,9 @@ class Process:
         try:
             if file.check_file_size(klarf_path, timeout=self.config.time_out):
                 results = self.clustering.apply(
-                    klarf_path=klarf_path, output_path=output_path
+                    klarf_path=klarf_path,
+                    output_path=output_path,
+                    klarf_format=self.config.klarf_returned,
                 )
 
                 [

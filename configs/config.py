@@ -3,6 +3,7 @@ import json
 import platform
 import os
 from pathlib import Path
+from enum import Enum
 
 # MODELS
 from models.config import (
@@ -16,6 +17,15 @@ from models.config import (
 # WAFERMAP-CLUSTERING
 from wafermap_clustering.models.config import ClusteringConfig
 
+from wafermap_clustering.configs.config import KlarfFormat
+
+
+def check_klarf_formart(format: str):
+    if format not in [item.value for item in KlarfFormat]:
+        raise ValueError(f"{format=} is not allowed as klarf format")
+
+    return True
+
 
 def load_config(filepath: Path):
     root_config, clustering_config, path_config, mailing_config = {}, {}, {}, {}
@@ -25,6 +35,10 @@ def load_config(filepath: Path):
         with open(filepath, encoding="utf-8") as json_data_file:
             try:
                 root_config: dict = json.load(json_data_file)
+
+                klarf_format_config = root_config.get("klarf_returned", "")
+                check_klarf_formart(format=klarf_format_config)
+
                 clustering_config = root_config.get("clustering", {})
                 mailing_config = root_config.get("mailing", {})
                 path_config = {}
@@ -41,6 +55,8 @@ def load_config(filepath: Path):
 
     return Config(
         time_out=root_config.get("time_out", 5),
+        cpu_hog_tempo=root_config.get("cpu_hog_tempo", 0.1),
+        klarf_returned=klarf_format_config,
         platform=platform_system,
         attribute=root_config.get("attribute", "CLUSTER_ID"),
         path=PathConfig(

@@ -36,6 +36,8 @@ class LoggingConfig:
 @dataclass
 class Config(ClusteringConfig):
     time_out: int
+    cpu_hog_tempo: float
+    klarf_returned: str
     path: PathConfig
     mailing: MailingConfig
     multi_processing: MultiProcessingConfig
