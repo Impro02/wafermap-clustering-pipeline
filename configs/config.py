@@ -5,7 +5,13 @@ import os
 from pathlib import Path
 
 # MODELS
-from models.config import Config, MailingConfig, PathConfig, MultiProcessingConfig
+from models.config import (
+    Config,
+    LoggingConfig,
+    MailingConfig,
+    PathConfig,
+    MultiProcessingConfig,
+)
 
 # WAFERMAP-CLUSTERING
 from wafermap_clustering.models.config import ClusteringConfig
@@ -23,6 +29,7 @@ def load_config(filepath: Path):
                 mailing_config = root_config.get("mailing", {})
                 path_config = {}
                 multi_processing_config = root_config.get("multi_processing", {})
+                logging_config = root_config.get("logging", {})
 
                 platform_config = root_config.get("platforms", [])
                 if platform_system in platform_config:
@@ -37,9 +44,9 @@ def load_config(filepath: Path):
         platform=platform_system,
         attribute=root_config.get("attribute", "CLUSTER_ID"),
         path=PathConfig(
-            input=path_config.get("input", "/data/clustering/tmp"),
-            output=path_config.get("output", "/data/clustering/output"),
-            error=path_config.get("error", "/data/clustering/error"),
+            input=Path(path_config.get("input", "/data/clustering/tmp")),
+            output=Path(path_config.get("output", "/data/clustering/output")),
+            error=Path(path_config.get("error", "/data/clustering/error")),
         ),
         clustering=ClusteringConfig(
             eps=clustering_config.get("eps", 4),
@@ -58,4 +65,5 @@ def load_config(filepath: Path):
             max_workers=multi_processing_config.get("max_workers", 3),
             num_files=multi_processing_config.get("num_files", 5),
         ),
+        logging=LoggingConfig(path=Path(logging_config.get("path", os.getcwd()))),
     )

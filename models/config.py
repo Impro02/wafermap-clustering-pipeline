@@ -1,5 +1,6 @@
 # MODULES
 from dataclasses import dataclass
+from pathlib import Path
 
 # WAFERMAP-CLUSTERING
 from wafermap_clustering.models.config import Config as ClusteringConfig
@@ -15,9 +16,9 @@ class MailingConfig:
 
 @dataclass
 class PathConfig:
-    input: str
-    output: str
-    error: str
+    input: Path
+    output: Path
+    error: Path
 
 
 @dataclass
@@ -28,8 +29,14 @@ class MultiProcessingConfig:
 
 
 @dataclass
+class LoggingConfig:
+    path: Path
+
+
+@dataclass
 class Config(ClusteringConfig):
     time_out: int
     path: PathConfig
     mailing: MailingConfig
     multi_processing: MultiProcessingConfig
+    logging: LoggingConfig
