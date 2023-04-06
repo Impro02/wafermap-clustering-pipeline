@@ -96,11 +96,12 @@ class Process:
                     klarf_path=klarf_path,
                     output_path=output_path,
                     klarf_format=self.config.klarf_returned,
+                    clustering_mode=self.config.clustering_algo,
                 )
 
                 [
                     logger.info(
-                        msg=f"{process_id=} ({repr(clustering)}) was processed in {clustering.processing_timestamp} [clusters={clustering.clusters}]"
+                        msg=f"{process_id=} processed ({repr(clustering)}) with {self.config.clustering_algo} in {clustering.performance.clustering_timestamp}s [defects={len(clustering.clustered_defects)}, clusters={clustering.clusters}] [klarf ({self.config.klarf_returned}) generated in {clustering.performance.output_timestamp}s]"
                     )
                     for clustering in results
                 ]

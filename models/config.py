@@ -42,3 +42,4 @@ class Config(ClusteringConfig):
     mailing: MailingConfig
     multi_processing: MultiProcessingConfig
     logging: LoggingConfig
+    clustering_algo: str

@@ -15,7 +15,11 @@ from models.config import (
 )
 
 # WAFERMAP-CLUSTERING
-from wafermap_clustering.models.config import ClusteringConfig
+from wafermap_clustering.models.config import (
+    ClusteringConfig,
+    DBSCANConfig,
+    HDBSCANConfig,
+)
 
 from wafermap_clustering.configs.config import KlarfFormat
 
@@ -28,7 +32,12 @@ def check_klarf_formart(format: str):
 
 
 def load_config(filepath: Path):
-    root_config, clustering_config, path_config, mailing_config = {}, {}, {}, {}
+    (
+        root_config,
+        clustering_config,
+        path_config,
+        mailing_config,
+    ) = ({}, {}, {}, {})
 
     platform_system = platform.system().lower()
     if os.path.exists(filepath):
@@ -60,26 +69,16 @@ def load_config(filepath: Path):
         platform=platform_system,
         attribute=root_config.get("attribute", "CLUSTER_ID"),
         path=PathConfig(
-            input=Path(path_config.get("input", "/data/clustering/tmp")),
-            output=Path(path_config.get("output", "/data/clustering/output")),
-            error=Path(path_config.get("error", "/data/clustering/error")),
+            input=Path(path_config.get("input")),
+            output=Path(path_config.get("output")),
+            error=Path(path_config.get("error")),
         ),
+        clustering_algo=root_config.get("clustering_algo", "dbscan"),
         clustering=ClusteringConfig(
-            eps=clustering_config.get("eps", 4),
-            min_samples=clustering_config.get("min_samples", 3),
+            dbscan=DBSCANConfig(**clustering_config.get("dbscan")),
+            hdbscan=HDBSCANConfig(**clustering_config.get("hdbscan")),
         ),
-        mailing=MailingConfig(
-            host=mailing_config.get("host", None),
-            port=mailing_config.get("port", None),
-            sender=mailing_config.get("sender", None),
-            receiver=mailing_config.get("receiver", None),
-        ),
-        multi_processing=MultiProcessingConfig(
-            use_multi_processing=multi_processing_config.get(
-                "use_multi_processing", False
-            ),
-            max_workers=multi_processing_config.get("max_workers", 3),
-            num_files=multi_processing_config.get("num_files", 5),
-        ),
+        mailing=MailingConfig(**mailing_config),
+        multi_processing=MultiProcessingConfig(**multi_processing_config),
         logging=LoggingConfig(path=Path(logging_config.get("path", os.getcwd()))),
     )
