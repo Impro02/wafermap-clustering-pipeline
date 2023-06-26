@@ -3,8 +3,8 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-#CONFIGS
-from configs.config import MailingConfig
+# CONFIGS
+from ..configs.config import MailingConfig
 
 
 def send_mail(

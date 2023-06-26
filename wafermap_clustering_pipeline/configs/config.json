@@ -1,0 +1,46 @@
+{
+    "project_name": "wafermap-clustering-pipeline",
+    "directories": {
+        "logs": "{{root}}/logs",
+        "tmp": "{{root}}/tmp",
+        "input": "{{root}}/process/tmp",
+        "output": "{{root}}/process/output",
+        "error": "{{root}}/process/error"
+    },
+    "platforms": {
+        "windows": {
+            "root": "/{{project_name}}",
+            "home": "/{{project_name}}"
+        },
+        "linux": {
+            "root": "/application/{{user}}",
+            "home": "/home/{{user}}"
+        }
+    },
+    "time_out": 5,
+    "cpu_hog_tempo": 0.1,
+    "attribute": "DYN_CLUSTER_ID",
+    "klarf_returned": "full",
+    "clustering_algo": "dbscan",
+    "clustering": {
+        "dbscan": {
+            "eps": 6,
+            "min_samples": 5
+        },
+        "hdbscan": {
+            "min_samples": 3,
+            "min_cluster_size": 5
+        }
+    },
+    "multi_processing": {
+        "use_multi_processing": true,
+        "max_workers": 4,
+        "num_files": 3
+    },
+    "mailing": {
+        "host": "c1mailhub0.cro.st.com",
+        "port": 25,
+        "sender": "clustering.cro@st.com",
+        "receiver": "maxime.martin@st.com"
+    }
+}

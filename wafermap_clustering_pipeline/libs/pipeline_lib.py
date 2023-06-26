@@ -3,11 +3,10 @@ import threading
 from logging import Logger
 
 # LIBS
-from libs.process_lib import Process
+from ..libs.process_lib import Process
 
-
-# MODELS
-from models.config import Config
+# CONFIG
+from ..configs.config import Config
 
 
 class PipeLine:

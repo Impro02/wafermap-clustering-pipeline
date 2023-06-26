@@ -7,16 +7,16 @@ from typing import Tuple
 from pathlib import Path
 from logging import Logger
 
-# MODELS
-from models.config import Config
-
 # WAFERMAP-CLUSTERING
 from wafermap_clustering.wafermap_clustering import Clustering
 
-from configs.logging import setup_logger
+
+# CONNFIG
+from ..configs.config import Config
+from ..configs.logging import setup_logger
 
 # UTILS
-from utils import mailing, file
+from ..utils import mailing, file
 
 
 class Process:
@@ -31,7 +31,8 @@ class Process:
     ):
         while self.running:
             klarf_paths, nbr_klarfs = file.get_files(
-                path=self.config.path.input, sort_by_modification_date=True
+                path=self.config.directories.input,
+                sort_by_modification_date=True,
             )
 
             if nbr_klarfs == 0:
@@ -60,13 +61,16 @@ class Process:
                     ]
                     results = pool.starmap(
                         self.process_chunks,
-                        iterable=[(chunk, self.config.path.output) for chunk in chunks],
+                        iterable=[
+                            (chunk, self.config.directories.output) for chunk in chunks
+                        ],
                     )
                     results = [item for sublist in results for item in sublist]
             else:
                 for klarf_path in klarf_paths:
                     results = self.process_klarf(
-                        klarf_path=klarf_path, output_dir=self.config.path.output
+                        klarf_path=klarf_path,
+                        output_dir=self.config.directories.output,
                     )
 
             self.logger.info(
@@ -81,20 +85,18 @@ class Process:
     def process_klarf(self, klarf_path: Path, output_dir: Path):
         # get the current process
         process_id = os.getpid()
-        logger = setup_logger(name="process_klarf", path=self.config.logging.path)
+        logger = setup_logger(
+            name="process_klarf",
+            directory=Path(self.config.directories.logs),
+        )
 
         klarf = os.path.basename(klarf_path)
-        klarf_name, klarf_extension = os.path.splitext(klarf)
-
-        output_path = os.path.join(
-            output_dir, f"{klarf_name}_clustered{klarf_extension}"
-        )
 
         try:
             if file.check_file_size(klarf_path, timeout=self.config.time_out):
                 results = self.clustering.apply(
                     klarf_path=klarf_path,
-                    output_path=output_path,
+                    output_directory=output_dir,
                     klarf_format=self.config.klarf_returned,
                     clustering_mode=self.config.clustering_algo,
                 )
@@ -120,11 +122,11 @@ class Process:
             )
         except Exception as ex:
             if os.path.exists(klarf_path):
-                file.move(src=klarf_path, dest=self.config.path.error / klarf)
+                file.move(src=klarf_path, dest=self.config.directories.error / klarf)
 
             message_error = mailing.send_mail_error(
                 klarf=klarf,
-                error_path=self.config.path.error,
+                error_path=self.config.directories.error,
                 config=self.config.mailing,
             )
 
