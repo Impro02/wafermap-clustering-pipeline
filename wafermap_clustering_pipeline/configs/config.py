@@ -34,15 +34,11 @@ class MailingConfig:
 
 @dataclass
 class MultiProcessingConfig:
-    use_multi_processing: bool
     max_workers: int
-    num_files: int
 
 
 class Config(WafermapClusteringConfig):
 
-    time_out: int = field(init=False)
-    cpu_hog_tempo: float = field(init=False)
     klarf_returned: str = field(init=False)
     clustering_algo: str = field(init=False)
 
@@ -53,8 +49,6 @@ class Config(WafermapClusteringConfig):
     def __post_init__(self):
         try:
             super().__post_init__()
-            self.time_out = self.raw_data.get("time_out")
-            self.cpu_hog_tempo = self.raw_data.get("cpu_hog_tempo")
             self.klarf_returned = self.raw_data.get("klarf_returned")
             self.clustering_algo = self.raw_data.get("clustering_algo")
 

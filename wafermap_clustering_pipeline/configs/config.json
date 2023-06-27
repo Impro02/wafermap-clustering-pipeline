@@ -3,8 +3,8 @@
     "directories": {
         "logs": "{{root}}/logs",
         "tmp": "{{root}}/tmp",
-        "input": "{{root}}/process/tmp",
-        "output": "{{root}}/process/output",
+        "input": "{{root}}/process/in",
+        "output": "{{root}}/process/out",
         "error": "{{root}}/process/error"
     },
     "platforms": {
@@ -17,8 +17,6 @@
             "home": "/home/{{user}}"
         }
     },
-    "time_out": 5,
-    "cpu_hog_tempo": 0.1,
     "attribute": "DYN_CLUSTER_ID",
     "klarf_returned": "full",
     "clustering_algo": "dbscan",
@@ -33,9 +31,7 @@
         }
     },
     "multi_processing": {
-        "use_multi_processing": true,
-        "max_workers": 4,
-        "num_files": 3
+        "max_workers": 4
     },
     "mailing": {
         "host": "c1mailhub0.cro.st.com",
