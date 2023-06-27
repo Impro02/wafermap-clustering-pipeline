@@ -34,6 +34,11 @@ class Process:
         klarf = os.path.basename(klarf_path)
 
         try:
+            file.check_file_size(
+                klarf_path,
+                timeout=self.config.time_out,
+            )
+
             results = self.clustering.apply(
                 klarf_path=klarf_path,
                 output_directory=self.config.directories.output,
@@ -55,7 +60,7 @@ class Process:
 
             return results
 
-        except Exception as ex:
+        except (TimeoutError, Exception) as ex:
             if os.path.exists(klarf_path):
                 file.move(src=klarf_path, dest=self.config.directories.error / klarf)
 
@@ -65,4 +70,10 @@ class Process:
                 config=self.config.mailing,
             )
 
-            logger.critical(msg=message_error, exc_info=ex)
+            if isinstance(ex, TimeoutError):
+                logger.warning(
+                    msg=f"Timeout exceeded while cheking size of {klarf_path=}",
+                    exc_info=ex,
+                )
+            else:
+                logger.critical(msg=message_error, exc_info=ex)

@@ -30,8 +30,6 @@ def check_file_size(path: Path, timeout: float = 10.0):
             break
         size = new_size
 
-    return True
-
 
 def get_files(
     path: Path, sort_by_modification_date: bool = False

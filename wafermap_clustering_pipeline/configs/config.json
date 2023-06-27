@@ -17,6 +17,7 @@
             "home": "/home/{{user}}"
         }
     },
+    "time_out": 30,
     "attribute": "DYN_CLUSTER_ID",
     "klarf_returned": "full",
     "clustering_algo": "dbscan",
