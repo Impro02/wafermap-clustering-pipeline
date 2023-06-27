@@ -13,7 +13,7 @@
             "home": "/{{project_name}}"
         },
         "linux": {
-            "root": "/application/{{user}}",
+            "root": "/appli/udb/DBSCAN",
             "home": "/home/{{user}}"
         }
     },
