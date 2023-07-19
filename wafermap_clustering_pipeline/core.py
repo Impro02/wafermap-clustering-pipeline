@@ -35,7 +35,7 @@ class FileHandler(FileSystemEventHandler):
         self._logger.info(f"New file {(file_path := event.src_path)} detected")
 
         # Trigger a task to process the new file
-        self._pool.apply_async(self._process.process_klarf, args=(file_path,))
+        self._pool.apply_async(self._process.process_klarf, args=(Path(file_path),))
 
 
 if __name__ == "__main__":
