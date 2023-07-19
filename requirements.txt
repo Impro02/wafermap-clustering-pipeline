@@ -1,1 +1,1 @@
-wafermap-clustering==0.3.2
+wafermap-clustering==0.3.3
