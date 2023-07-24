@@ -5,6 +5,8 @@ from pathlib import Path
 # WAFERMAP-CLUSTERING
 from wafermap_clustering.wafermap_clustering import Clustering
 
+# KLARF_READER
+from klarf_reader.klarf import Klarf
 
 # CONNFIG
 from ..configs.config import Config
@@ -39,9 +41,17 @@ class Process:
                 timeout=self.config.time_out,
             )
 
-            results = self.clustering.apply(
-                klarf_path=klarf_path,
-                output_directory=self.config.directories.output,
+            content = Klarf.load_from_file_with_raw_content(filepath=klarf_path)
+
+            results = self.clustering.apply_from_content(
+                content=content,
+                output_directory=Path(
+                    self.config.directories.output.format(
+                        **{"loader_name": content[0].inspection_station_id.id}
+                    )
+                ),
+                original_klarf_name=klarf_path.stem,
+                original_klarf_extension=klarf_path.suffix,
                 klarf_format=self.config.klarf_returned,
                 clustering_mode=self.config.clustering_algo,
             )

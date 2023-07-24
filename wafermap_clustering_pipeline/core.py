@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
         # Submit a task to process each file
         for file_path in files:
-            pool.apply_async(process.process_klarf, args=(file_path,))
+            pool.apply_async(process.process_klarf, args=(Path(file_path),))
 
     try:
         while True:
