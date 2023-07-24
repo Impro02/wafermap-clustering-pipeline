@@ -1,1 +1,2 @@
 wafermap-clustering==0.3.4
+watchdog==3.0.0
