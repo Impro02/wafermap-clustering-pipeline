@@ -71,8 +71,10 @@ class Process:
             return results
 
         except (TimeoutError, Exception) as ex:
-            if os.path.exists(klarf_path):
-                file.move(src=klarf_path, dest=self.config.directories.error / klarf)
+            if klarf_path.exists():
+                file.move(
+                    src=klarf_path, dest=Path(self.config.directories.error) / klarf
+                )
 
             message_error = mailing.send_mail_error(
                 klarf=klarf,

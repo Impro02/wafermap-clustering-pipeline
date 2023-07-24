@@ -5,7 +5,7 @@
         "tmp": "{{root}}/tmp",
         "input": "{{root}}/process/in",
         "output": "{{root}}/process/{loader_name}/out",
-        "error": "{{root}}/process/{loader_name}/error"
+        "error": "{{root}}/process/error"
     },
     "platforms": {
         "windows": {
