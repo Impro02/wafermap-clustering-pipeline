@@ -60,6 +60,10 @@ class Process:
                 clustering_mode=self.config.clustering_algo,
             )
 
+            logger.info(
+                msg=f"{process_id=} succesfully processed {len(results)} wafers in {klarf_name=}"
+            )
+
             [
                 logger.info(
                     msg=f"{process_id=} processed ({repr(clustering)}) with {self.config.clustering_algo} in {clustering.performance.clustering_timestamp}s [defects={len(clustering.clustered_defects)}, clusters={clustering.clusters}] [klarf ({self.config.klarf_returned}) generated in {clustering.performance.output_timestamp}s]"
