@@ -1,4 +1,5 @@
 # MODULES
+import sys
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 import logging
@@ -13,6 +14,12 @@ def setup_logger(name: str, directory: Path):
         formatter = logging.Formatter(
             "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
+
+        # Add a stream handler to log messages to stdout
+        stream_handler = logging.StreamHandler(stream=sys.stdout)
+        stream_handler.setLevel(logging.INFO)
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
 
         # Add a file handler to log messages to a file
         directory.mkdir(parents=True, exist_ok=True)
