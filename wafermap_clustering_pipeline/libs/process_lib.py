@@ -33,7 +33,9 @@ class Process:
             directory=Path(self.config.directories.logs),
         )
 
-        klarf = os.path.basename(klarf_path)
+        klarf_name = klarf_path.name
+
+        logger.info(msg=f"{process_id=} ready to process {klarf_name=}")
 
         try:
             file.check_file_size(
@@ -64,7 +66,7 @@ class Process:
             ]
 
             if len(results) == 0 or not os.path.exists(klarf_path):
-                return logger.error(msg=f"Unable to remove {klarf=}")
+                return logger.error(msg=f"Unable to remove {klarf_name=}")
 
             os.remove(klarf_path)
 
@@ -73,11 +75,12 @@ class Process:
         except (TimeoutError, Exception) as ex:
             if klarf_path.exists():
                 file.move(
-                    src=klarf_path, dest=Path(self.config.directories.error) / klarf
+                    src=klarf_path,
+                    dest=Path(self.config.directories.error) / klarf_name,
                 )
 
             message_error = mailing.send_mail_error(
-                klarf=klarf,
+                klarf=klarf_name,
                 error_path=self.config.directories.error,
                 config=self.config.mailing,
             )
