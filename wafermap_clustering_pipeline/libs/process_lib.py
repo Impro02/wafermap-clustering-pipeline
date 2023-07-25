@@ -45,6 +45,8 @@ class Process:
 
             content = Klarf.load_from_file_with_raw_content(filepath=klarf_path)
 
+            logger.info(msg=f"{process_id=} klarf content loaded {klarf_name=}")
+
             results = self.clustering.apply_from_content(
                 content=content,
                 output_directory=Path(
