@@ -1,5 +1,6 @@
 # MODULES
 import smtplib
+from logging import Logger
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -23,7 +24,9 @@ def send_mail(
         server.sendmail(sender, receiver, message.as_string())
 
 
-def send_mail_error(klarf: str, error_path: str, config: MailingConfig) -> str:
+def send_mail_error(
+    klarf: str, error_path: str, config: MailingConfig, logger: Logger = None
+) -> str:
     message_error = f"{klarf=} processing failed, moved to {error_path}"
 
     html = f"""\
@@ -34,13 +37,17 @@ def send_mail_error(klarf: str, error_path: str, config: MailingConfig) -> str:
         </html>
     """
 
-    send_mail(
-        host=config.host,
-        port=config.port,
-        sender=config.sender,
-        receiver=config.receiver,
-        subject=f"Clustering - Error on {klarf}",
-        msg_html=html,
-    )
+    try:
+        send_mail(
+            host=config.host,
+            port=config.port,
+            sender=config.sender,
+            receiver=config.receiver,
+            subject=f"Clustering - Error on {klarf}",
+            msg_html=html,
+        )
+    except Exception as ex:
+        if logger is not None:
+            logger.critical("Unable to send error email", exc_info=ex)
 
     return message_error

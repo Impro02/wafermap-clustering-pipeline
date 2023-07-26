@@ -4,7 +4,7 @@
         "logs": "{{root}}/logs",
         "tmp": "{{root}}/tmp",
         "input": "{{root}}/process/in",
-        "output": "{{root}}/process/{loader_name}/out",
+        "output": "{{root}}/process/out",
         "error": "{{root}}/process/error"
     },
     "platforms": {

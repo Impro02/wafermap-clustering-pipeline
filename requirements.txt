@@ -1,2 +1,2 @@
-wafermap-clustering==0.3.4
+wafermap-clustering==0.3.5
 watchdog==3.0.0
