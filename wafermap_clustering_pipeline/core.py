@@ -5,7 +5,7 @@ import os
 from multiprocessing import Pool
 from pathlib import Path
 from logging import Logger
-from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver
 from watchdog.events import FileSystemEventHandler
 
 from wafermap_clustering_pipeline.libs.process_lib import Process
@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
     # Create a file watcher to monitor the folder for new files
     event_handler = FileHandler(pool, process, LOGGER)
-    observer = Observer()
+    observer = PollingObserver()
     observer.schedule(event_handler, path=CONFIGS.directories.input, recursive=False)
     observer.start()
 
