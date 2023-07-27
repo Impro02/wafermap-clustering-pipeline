@@ -43,7 +43,10 @@ class Process:
                 timeout=self.config.time_out,
             )
 
-            content = Klarf.load_from_file_with_raw_content(filepath=klarf_path)
+            content = Klarf.load_from_file_with_raw_content(
+                filepath=klarf_path,
+                parse_summary=False,
+            )
 
             logger.info(msg=f"{process_id=} klarf content loaded {klarf_name=}")
 

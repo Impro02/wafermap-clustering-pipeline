@@ -10,9 +10,43 @@ from watchdog.events import FileSystemEventHandler
 
 from wafermap_clustering_pipeline.libs.process_lib import Process
 
+# UTILS
+from .utils import file
+
 # CONFIGS
 from .configs.config import Config
 from .configs.logging import setup_logger
+
+
+def process_lot_end_file(
+    file_path: Path,
+    output_path: str,
+    logger: Logger,
+):
+    if not file_path.exists() or not file_path.suffix == ".trf":
+        return False
+
+    with open(file_path, "r") as f:
+        raw_content = f.readlines()
+
+    for line in raw_content:
+        if line.lstrip().lower().startswith("inspectionstationid"):
+            inspection_station_id = line.split(";")[0].split(" ")
+            inspection_station_id = [id.strip('"') for id in inspection_station_id]
+            inspection_station_id = inspection_station_id[1:4]
+
+            output_path = output_path.format(
+                **{"loader_name": inspection_station_id[-1]}
+            )
+
+    file.move(
+        src=file_path,
+        dest=Path(output_path) / file_path.name,
+    )
+
+    logger.info(f"{file_path.name=} was successfully moved to {output_path}")
+
+    return True
 
 
 class FileHandler(FileSystemEventHandler):
@@ -34,8 +68,15 @@ class FileHandler(FileSystemEventHandler):
 
         self._logger.info(f"New file {(file_path := event.src_path)} detected")
 
-        # Trigger a task to process the new file
-        self._pool.apply_async(self._process.process_klarf, args=(Path(file_path),))
+        lot_end_moved = process_lot_end_file(
+            file_path=Path(file_path),
+            output_path=self._process.config.directories.output,
+            logger=self._logger,
+        )
+
+        if not lot_end_moved:
+            # Trigger a task to process the new file
+            self._pool.apply_async(self._process.process_klarf, args=(Path(file_path),))
 
 
 if __name__ == "__main__":
@@ -82,7 +123,14 @@ if __name__ == "__main__":
 
         # Submit a task to process each file
         for file_path in files:
-            pool.apply_async(process.process_klarf, args=(Path(file_path),))
+            lot_end_moved = process_lot_end_file(
+                file_path=Path(file_path),
+                output_path=CONFIGS.directories.output,
+                logger=LOGGER,
+            )
+
+            if not lot_end_moved:
+                pool.apply_async(process.process_klarf, args=(Path(file_path),))
 
     try:
         while True:
