@@ -62,11 +62,11 @@ class FileHandler(FileSystemEventHandler):
         self._logger = logger
 
     def on_created(self, event):
+        self._logger.info(f"New file {(file_path := event.src_path)} detected")
+
         # Check if the event is for a file
         if event.is_directory:
             return
-
-        self._logger.info(f"New file {(file_path := event.src_path)} detected")
 
         lot_end_moved = process_lot_end_file(
             file_path=Path(file_path),
@@ -107,8 +107,13 @@ if __name__ == "__main__":
     # Create a file watcher to monitor the folder for new files
     event_handler = FileHandler(pool, process, LOGGER)
     observer = PollingObserver()
-    observer.schedule(event_handler, path=CONFIGS.directories.input, recursive=False)
+    observer.schedule(
+        event_handler,
+        path=CONFIGS.directories.input,
+        recursive=False,
+    )
     observer.start()
+    observer.is_alive()
 
     files = [
         os.path.join(CONFIGS.directories.input, f)
@@ -134,6 +139,28 @@ if __name__ == "__main__":
 
     try:
         while True:
+            if not os.path.isdir(CONFIGS.directories.input):
+                if not stopped:
+                    observer.stop()
+                    stopped = True
+
+                    LOGGER.info(
+                        f"File watcher stoped because target folder missing {CONFIGS.directories.input})"
+                    )
+            else:
+                if stopped:
+                    observer = PollingObserver()
+                    stopped = False
+                    observer.schedule(
+                        event_handler,
+                        path=CONFIGS.directories.input,
+                        recursive=False,
+                    )
+                    observer.start()
+
+                    LOGGER.info(
+                        f"File watcher restart to monitor new files from {CONFIGS.directories.input})"
+                    )
             time.sleep(1)
     except KeyboardInterrupt:
         observer.stop()
