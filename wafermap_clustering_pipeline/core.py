@@ -137,6 +137,7 @@ if __name__ == "__main__":
             if not lot_end_moved:
                 pool.apply_async(process.process_klarf, args=(Path(file_path),))
 
+    stopped = False
     try:
         while True:
             if not os.path.isdir(CONFIGS.directories.input):
