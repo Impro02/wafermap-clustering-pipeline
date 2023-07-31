@@ -87,10 +87,6 @@ if __name__ == "__main__":
         directory=Path(CONFIGS.directories.logs),
     )
 
-    LOGGER.info(
-        f"Creation of process pool (max_workers={CONFIGS.multi_processing.max_workers})"
-    )
-
     # Create the process instance
     process = Process(config=CONFIGS)
 
