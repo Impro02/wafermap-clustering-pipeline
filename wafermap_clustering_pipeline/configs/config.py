@@ -1,6 +1,5 @@
 # MODULES
 from dataclasses import dataclass, field
-from pathlib import Path
 
 # WAFERMAP-CLUSTERING
 from wafermap_clustering.configs.config import (
@@ -32,18 +31,12 @@ class MailingConfig:
     receiver: str
 
 
-@dataclass
-class MultiProcessingConfig:
-    max_workers: int
-
-
 class Config(WafermapClusteringConfig):
     time_out: int = field(init=False)
     klarf_returned: str = field(init=False)
     clustering_algo: str = field(init=False)
 
     directories: DirectoryConfig = field(init=False)
-    multi_processing: MultiProcessingConfig = field(init=False)
     mailing: MailingConfig = field(init=False)
 
     def __post_init__(self):
@@ -54,14 +47,12 @@ class Config(WafermapClusteringConfig):
             self.clustering_algo = self.raw_data.get("clustering_algo")
 
             directories_config = self.raw_data.get("directories", {})
-            multi_processing_config = self.raw_data.get("multi_processing")
             mailing_config = self.raw_data.get("mailing")
 
             self.directories.input = directories_config.get("input")
             self.directories.output = directories_config.get("output")
             self.directories.error = directories_config.get("error")
 
-            self.multi_processing = MultiProcessingConfig(**multi_processing_config)
             self.mailing = MailingConfig(**mailing_config)
 
             check_klarf_formart(format=self.klarf_returned)

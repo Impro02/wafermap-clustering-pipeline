@@ -2,7 +2,6 @@
 import platform
 import time
 import os
-from multiprocessing import Pool
 from pathlib import Path
 from logging import Logger
 from watchdog.observers.polling import PollingObserver
@@ -52,12 +51,10 @@ def process_lot_end_file(
 class FileHandler(FileSystemEventHandler):
     def __init__(
         self,
-        pool,
         process: Process,
         logger: Logger,
     ):
         super().__init__()
-        self._pool = pool
         self._process = process
         self._logger = logger
 
@@ -76,7 +73,7 @@ class FileHandler(FileSystemEventHandler):
 
         if not lot_end_moved:
             # Trigger a task to process the new file
-            self._pool.apply_async(self._process.process_klarf, args=(Path(file_path),))
+            self._process.process_klarf(Path(file_path))
 
 
 if __name__ == "__main__":
@@ -94,9 +91,6 @@ if __name__ == "__main__":
         f"Creation of process pool (max_workers={CONFIGS.multi_processing.max_workers})"
     )
 
-    # Create a process pool to manage the worker processes
-    pool = Pool(processes=CONFIGS.multi_processing.max_workers)
-
     # Create the process instance
     process = Process(config=CONFIGS)
 
@@ -105,7 +99,7 @@ if __name__ == "__main__":
     )
 
     # Create a file watcher to monitor the folder for new files
-    event_handler = FileHandler(pool, process, LOGGER)
+    event_handler = FileHandler(process, LOGGER)
     observer = PollingObserver()
     observer.schedule(
         event_handler,
@@ -135,7 +129,7 @@ if __name__ == "__main__":
             )
 
             if not lot_end_moved:
-                pool.apply_async(process.process_klarf, args=(Path(file_path),))
+                process.process_klarf(Path(file_path))
 
     stopped = False
     try:
