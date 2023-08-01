@@ -1,4 +1,5 @@
 # MODULES
+from logging import Logger
 import os
 from pathlib import Path
 
@@ -17,9 +18,12 @@ from ..utils import mailing, file
 
 
 class Process:
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: Config, logger: Logger) -> None:
         self.config = config
-        self.clustering = Clustering(config=self.config)
+        self.clustering = Clustering(
+            config=self.config,
+            logger=logger,
+        )
 
     def process_klarf(
         self,

@@ -94,7 +94,10 @@ if __name__ == "__main__":
     atexit.register(exit_handler)
 
     # Create the process instance
-    process = Process(config=CONFIGS)
+    process = Process(
+        config=CONFIGS,
+        logger=LOGGER,
+    )
 
     LOGGER.info(
         f"Creation of a file watcher to monitor new files from {CONFIGS.directories.input})"
@@ -136,7 +139,6 @@ if __name__ == "__main__":
     stopped = False
     try:
         while True:
-            LOGGER.info(f"Run")
             if not os.path.isdir(CONFIGS.directories.input):
                 if not stopped:
                     observer.stop()
