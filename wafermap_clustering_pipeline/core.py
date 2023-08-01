@@ -1,4 +1,5 @@
 # MODULES
+import atexit
 import platform
 import time
 import os
@@ -86,6 +87,11 @@ if __name__ == "__main__":
         name="clustering",
         directory=Path(CONFIGS.directories.logs),
     )
+
+    def exit_handler():
+        LOGGER.critical("Program stopped by the machine")
+
+    atexit.register(exit_handler)
 
     # Create the process instance
     process = Process(config=CONFIGS)
