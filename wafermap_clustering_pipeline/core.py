@@ -136,7 +136,7 @@ if __name__ == "__main__":
                     stopped = True
 
                     LOGGER.info(
-                        f"File watcher stoped because target folder missing {CONFIGS.directories.input})"
+                        f"File watcher stopped because target folder missing {CONFIGS.directories.input})"
                     )
             else:
                 if stopped:
@@ -155,4 +155,6 @@ if __name__ == "__main__":
             time.sleep(1)
     except KeyboardInterrupt:
         observer.stop()
+        LOGGER.info(f"File watcher stopped because interruped by user.")
+
     observer.join()
