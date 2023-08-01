@@ -136,6 +136,7 @@ if __name__ == "__main__":
     stopped = False
     try:
         while True:
+            LOGGER.info(f"Run")
             if not os.path.isdir(CONFIGS.directories.input):
                 if not stopped:
                     observer.stop()
@@ -158,7 +159,7 @@ if __name__ == "__main__":
                     LOGGER.info(
                         f"File watcher restart to monitor new files from {CONFIGS.directories.input})"
                     )
-            time.sleep(1)
+            time.sleep(5)
     except KeyboardInterrupt:
         observer.stop()
         LOGGER.info(f"File watcher stopped because interruped by user.")
