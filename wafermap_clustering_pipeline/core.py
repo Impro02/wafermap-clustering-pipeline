@@ -1,13 +1,12 @@
 # MODULES
-import atexit
 import platform
 import time
 import os
+from multiprocessing import Pool
 from pathlib import Path
 from logging import Logger
-from watchdog.observers.polling import PollingObserver
-from watchdog.events import FileSystemEventHandler
 
+# LIBS
 from wafermap_clustering_pipeline.libs.process_lib import Process
 
 # UTILS
@@ -44,37 +43,34 @@ def process_lot_end_file(
         dest=Path(output_path) / file_path.name,
     )
 
-    logger.info(f"{file_path.name=} was successfully moved to {output_path}")
+    logger.info(f"{file_path.name=} was successfully moved to {output_path}.")
 
     return True
 
 
-class FileHandler(FileSystemEventHandler):
+class Processor:
     def __init__(
         self,
-        process: Process,
+        config: Config,
         logger: Logger,
-    ):
-        super().__init__()
-        self._process = process
+    ) -> None:
+        self._config = config
         self._logger = logger
+        # Create the process instance
+        self.process = Process(
+            config=self._config,
+            logger=self._logger,
+        )
 
-    def on_created(self, event):
-        self._logger.info(f"New file {(file_path := event.src_path)} detected")
-
-        # Check if the event is for a file
-        if event.is_directory:
-            return
-
+    def process_file(self, file_path: Path):
         lot_end_moved = process_lot_end_file(
             file_path=Path(file_path),
-            output_path=self._process.config.directories.output,
+            output_path=self._config.directories.output,
             logger=self._logger,
         )
 
         if not lot_end_moved:
-            # Trigger a task to process the new file
-            self._process.process_klarf(Path(file_path))
+            self.process.process_klarf(klarf_path=file_path)
 
 
 if __name__ == "__main__":
@@ -88,82 +84,44 @@ if __name__ == "__main__":
         directory=Path(CONFIGS.directories.logs),
     )
 
-    def exit_handler():
-        LOGGER.critical("Program stopped by the machine")
+    # Create a process pool to manage the worker processes
+    pool = Pool(processes=CONFIGS.multi_processing.max_workers)
 
-    atexit.register(exit_handler)
+    LOGGER.info(
+        f"Creation of process pool (max_workers={CONFIGS.multi_processing.max_workers})."
+    )
 
-    # Create the process instance
-    process = Process(
+    processor = Processor(
         config=CONFIGS,
         logger=LOGGER,
     )
 
-    LOGGER.info(
-        f"Creation of a file watcher to monitor new files from {CONFIGS.directories.input})"
-    )
-
-    # Create a file watcher to monitor the folder for new files
-    event_handler = FileHandler(process, LOGGER)
-    observer = PollingObserver()
-    observer.schedule(
-        event_handler,
-        path=CONFIGS.directories.input,
-        recursive=False,
-    )
-    observer.start()
-    observer.is_alive()
-
-    files = [
-        os.path.join(CONFIGS.directories.input, f)
-        for f in os.listdir(CONFIGS.directories.input)
-        if os.path.isfile(os.path.join(CONFIGS.directories.input, f))
-    ]
-
-    if (num_files := len(files)) > 0:
-        LOGGER.info(
-            f"Start the process of {num_files} file already in {CONFIGS.directories.input})"
-        )
-
-        # Submit a task to process each file
-        for file_path in files:
-            lot_end_moved = process_lot_end_file(
-                file_path=Path(file_path),
-                output_path=CONFIGS.directories.output,
-                logger=LOGGER,
-            )
-
-            if not lot_end_moved:
-                process.process_klarf(Path(file_path))
-
-    stopped = False
     try:
         while True:
-            if not os.path.isdir(CONFIGS.directories.input):
-                if not stopped:
-                    observer.stop()
-                    stopped = True
 
-                    LOGGER.info(
-                        f"File watcher stopped because target folder missing {CONFIGS.directories.input})"
-                    )
+            files = [
+                os.path.join(CONFIGS.directories.input, f)
+                for f in os.listdir(CONFIGS.directories.input)
+                if os.path.isfile(os.path.join(CONFIGS.directories.input, f))
+            ]
+
+            if (num_files := len(files)) == 0:
+                LOGGER.info(f"Batch ended with no file processed.")
             else:
-                if stopped:
-                    observer = PollingObserver()
-                    stopped = False
-                    observer.schedule(
-                        event_handler,
-                        path=CONFIGS.directories.input,
-                        recursive=False,
-                    )
-                    observer.start()
+                results = [
+                    pool.apply_async(processor.process_file, args=(Path(file_path),))
+                    for file_path in files
+                ]
 
-                    LOGGER.info(
-                        f"File watcher restart to monitor new files from {CONFIGS.directories.input})"
-                    )
-            time.sleep(5)
+                for result in results:
+                    result.get()
+
+                LOGGER.info(f"Batch ended with {num_files} file(s) processed.")
+
+            time.sleep(CONFIGS.interval)
+
     except KeyboardInterrupt:
-        observer.stop()
         LOGGER.info(f"File watcher stopped because interruped by user.")
 
-    observer.join()
+        pool.close()
+        pool.join()

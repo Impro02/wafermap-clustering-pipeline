@@ -17,6 +17,11 @@ def check_klarf_formart(format: str):
 
 
 @dataclass
+class MultiProcessingConfig:
+    max_workers: int
+
+
+@dataclass
 class DirectoryConfig(ClusteringDirectoryConfig):
     input: str
     output: str
@@ -37,7 +42,10 @@ class Config(WafermapClusteringConfig):
     clustering_algo: str = field(init=False)
 
     directories: DirectoryConfig = field(init=False)
+    multi_processing: MultiProcessingConfig = field(init=False)
     mailing: MailingConfig = field(init=False)
+
+    interval: int = field(init=False)
 
     def __post_init__(self):
         try:
@@ -47,13 +55,16 @@ class Config(WafermapClusteringConfig):
             self.clustering_algo = self.raw_data.get("clustering_algo")
 
             directories_config = self.raw_data.get("directories", {})
+            multi_processing_config = self.raw_data.get("multi_processing")
             mailing_config = self.raw_data.get("mailing")
 
             self.directories.input = directories_config.get("input")
             self.directories.output = directories_config.get("output")
             self.directories.error = directories_config.get("error")
-
+            self.multi_processing = MultiProcessingConfig(**multi_processing_config)
             self.mailing = MailingConfig(**mailing_config)
+
+            self.interval = self.raw_data.get("interval")
 
             check_klarf_formart(format=self.klarf_returned)
         except Exception as ex:

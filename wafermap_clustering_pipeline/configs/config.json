@@ -31,10 +31,14 @@
             "min_cluster_size": 5
         }
     },
+    "multi_processing": {
+        "max_workers": 4
+    },
     "mailing": {
         "host": "c1mailhub0.cro.st.com",
         "port": 25,
         "sender": "clustering.cro@st.com",
         "receiver": "maxime.martin@st.com"
-    }
+    },
+    "interval": 5
 }
