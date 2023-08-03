@@ -32,7 +32,8 @@
         }
     },
     "multi_processing": {
-        "max_workers": 4
+        "max_workers": 4,
+        "max_tasks_per_child": 200
     },
     "mailing": {
         "host": "c1mailhub0.cro.st.com",

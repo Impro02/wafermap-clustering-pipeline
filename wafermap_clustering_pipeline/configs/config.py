@@ -19,6 +19,7 @@ def check_klarf_formart(format: str):
 @dataclass
 class MultiProcessingConfig:
     max_workers: int
+    max_tasks_per_child: int
 
 
 @dataclass

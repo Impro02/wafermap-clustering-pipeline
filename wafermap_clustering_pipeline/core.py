@@ -85,7 +85,10 @@ if __name__ == "__main__":
     )
 
     # Create a process pool to manage the worker processes
-    pool = Pool(processes=CONFIGS.multi_processing.max_workers)
+    pool = Pool(
+        processes=CONFIGS.multi_processing.max_workers,
+        maxtasksperchild=CONFIGS.multi_processing.max_tasks_per_child,
+    )
 
     LOGGER.info(
         f"Creation of process pool (max_workers={CONFIGS.multi_processing.max_workers})."
