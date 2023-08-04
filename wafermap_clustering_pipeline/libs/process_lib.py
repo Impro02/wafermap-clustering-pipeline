@@ -1,5 +1,4 @@
 # MODULES
-from logging import Logger
 import os
 from pathlib import Path
 
@@ -18,11 +17,10 @@ from ..utils import mailing, file
 
 
 class Process:
-    def __init__(self, config: Config, logger: Logger) -> None:
+    def __init__(self, config: Config) -> None:
         self.config = config
         self.clustering = Clustering(
             config=self.config,
-            logger=logger,
         )
 
     def process_klarf(
@@ -31,7 +29,6 @@ class Process:
         logger_name: str = "process_klarf",
     ):
         # get the current process
-        process_id = os.getpid()
         logger = setup_logger(
             name=logger_name,
             directory=Path(self.config.directories.logs),
@@ -39,7 +36,7 @@ class Process:
 
         klarf_name = klarf_path.name
 
-        logger.info(msg=f"{process_id=} ready to process {klarf_name=}")
+        logger.info(msg=f"Ready to process {klarf_name=}")
 
         try:
             file.check_file_size(
@@ -52,9 +49,10 @@ class Process:
                 parse_summary=False,
             )
 
-            logger.info(msg=f"{process_id=} klarf content loaded {klarf_name=}")
+            logger.info(msg=f"Klarf content loaded {klarf_name=}")
 
             results = self.clustering.apply_from_content(
+                logger=logger,
                 content=content,
                 output_directory=Path(
                     self.config.directories.output.format(
@@ -67,13 +65,11 @@ class Process:
                 clustering_mode=self.config.clustering_algo,
             )
 
-            logger.info(
-                msg=f"{process_id=} succesfully processed {len(results)} wafers in {klarf_name=}"
-            )
+            logger.info(msg=f"End of process of {len(results)} wafers in {klarf_name=}")
 
             [
                 logger.info(
-                    msg=f"{process_id=} processed ({repr(clustering)}) with {self.config.clustering_algo} in {clustering.performance.clustering_timestamp}s [defects={len(clustering.clustered_defects)}, clusters={clustering.clusters}] [klarf ({self.config.klarf_returned}) generated in {clustering.performance.output_timestamp}s]"
+                    msg=f"Process of ({repr(clustering)}) enns with {self.config.clustering_algo} in {clustering.performance.clustering_timestamp}s [defects={len(clustering.clustered_defects)}, clusters={clustering.clusters}] [klarf ({self.config.klarf_returned}) generated in {clustering.performance.output_timestamp}s]"
                 )
                 for clustering in results
             ]

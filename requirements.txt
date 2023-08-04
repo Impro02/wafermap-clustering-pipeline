@@ -1,3 +1,2 @@
-wafermap-clustering==0.3.10
-klarf-reader==0.3.7
+wafermap-clustering==0.3.14
 watchdog==3.0.0

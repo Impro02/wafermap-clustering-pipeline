@@ -12,7 +12,8 @@ def setup_logger(name: str, directory: Path):
         logger.setLevel(logging.INFO)
 
         formatter = logging.Formatter(
-            "%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+            "%(asctime)s - [%(process)d] - %(levelname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
         # Add a stream handler to log messages to stdout

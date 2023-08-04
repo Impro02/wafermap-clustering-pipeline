@@ -59,7 +59,6 @@ class Processor:
         # Create the process instance
         self.process = Process(
             config=self._config,
-            logger=self._logger,
         )
 
     def process_file(self, file_path: Path):
