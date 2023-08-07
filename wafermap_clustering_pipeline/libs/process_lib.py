@@ -47,6 +47,7 @@ class Process:
             content = Klarf.load_from_file_with_raw_content(
                 filepath=klarf_path,
                 parse_summary=False,
+                defects_as_generator=True,
             )
 
             logger.info(msg=f"Klarf content loaded {klarf_name=}")
