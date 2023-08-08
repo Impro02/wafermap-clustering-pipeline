@@ -70,7 +70,7 @@ class Process:
 
             [
                 logger.info(
-                    msg=f"Process of ({repr(clustering)}) enns with {self.config.clustering_algo} in {clustering.performance.clustering_timestamp}s [defects={len(clustering.clustered_defects)}, clusters={clustering.clusters}] [klarf ({self.config.klarf_returned}) generated in {clustering.performance.output_timestamp}s]"
+                    msg=f"Process of ({repr(clustering)}) ends with {self.config.clustering_algo} in {clustering.performance.clustering_timestamp}s [defects={clustering.number_of_defects}, clusters={clustering.clusters}] [klarf ({self.config.klarf_returned}) generated in {clustering.performance.output_timestamp}s]"
                 )
                 for clustering in results
             ]
