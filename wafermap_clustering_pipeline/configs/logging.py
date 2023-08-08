@@ -27,8 +27,8 @@ def setup_logger(name: str, directory: Path):
 
         time_rotating_handler = TimedRotatingFileHandler(
             filename=directory / f"{name}.log",
-            when="midnight",
-            interval=1,
+            when="h",
+            interval=2,
             backupCount=10,
         )
         time_rotating_handler.setLevel(logging.INFO)
