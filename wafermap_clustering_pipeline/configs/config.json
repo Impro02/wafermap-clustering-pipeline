@@ -5,7 +5,8 @@
         "tmp": "{{root}}/tmp",
         "input": "{{root}}/process/in",
         "output": "{{root}}/process/out",
-        "error": "{{root}}/process/error"
+        "error": "{{root}}/process/error",
+        "archive": "{{root}}/process/archive"
     },
     "platforms": {
         "windows": {

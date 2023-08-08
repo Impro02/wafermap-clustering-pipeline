@@ -80,6 +80,11 @@ class Processor:
         return True
 
     def process_file(self, file_path: Path):
+        file.copy(
+            file_path,
+            Path(self._config.directories.archive) / file_path.name,
+        )
+
         lot_end_moved = self._process_lot_end_file(
             file_path=Path(file_path),
             output_path=self._config.directories.output,

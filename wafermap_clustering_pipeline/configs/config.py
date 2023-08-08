@@ -1,5 +1,5 @@
 # MODULES
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 
 # WAFERMAP-CLUSTERING
 from wafermap_clustering.configs.config import (
@@ -24,6 +24,7 @@ class MultiProcessingConfig:
 
 @dataclass
 class DirectoryConfig(ClusteringDirectoryConfig):
+    archive: str
     input: str
     output: str
     error: str
@@ -59,9 +60,11 @@ class Config(WafermapClusteringConfig):
             multi_processing_config = self.raw_data.get("multi_processing")
             mailing_config = self.raw_data.get("mailing")
 
-            self.directories.input = directories_config.get("input")
-            self.directories.output = directories_config.get("output")
-            self.directories.error = directories_config.get("error")
+            self.directories = DirectoryConfig(
+                home=self.directories.home,
+                root=self.directories.root,
+                **directories_config,
+            )
             self.multi_processing = MultiProcessingConfig(**multi_processing_config)
             self.mailing = MailingConfig(**mailing_config)
 
