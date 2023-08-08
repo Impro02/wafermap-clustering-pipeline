@@ -10,42 +10,11 @@ from logging import Logger
 from wafermap_clustering_pipeline.libs.process_lib import Process
 
 # UTILS
-from .utils import file
+from .utils import file, mailing
 
 # CONFIGS
 from .configs.config import Config
 from .configs.logging import setup_logger
-
-
-def process_lot_end_file(
-    file_path: Path,
-    output_path: str,
-    logger: Logger,
-):
-    if not file_path.exists() or not file_path.suffix == ".trf":
-        return False
-
-    with open(file_path, "r") as f:
-        raw_content = f.readlines()
-
-    for line in raw_content:
-        if line.lstrip().lower().startswith("inspectionstationid"):
-            inspection_station_id = line.split(";")[0].split(" ")
-            inspection_station_id = [id.strip('"') for id in inspection_station_id]
-            inspection_station_id = inspection_station_id[1:4]
-
-            output_path = output_path.format(
-                **{"loader_name": inspection_station_id[-1]}
-            )
-
-    file.move(
-        src=file_path,
-        dest=Path(output_path) / file_path.name,
-    )
-
-    logger.info(f"{file_path.name=} was successfully moved to {output_path}.")
-
-    return True
 
 
 class Processor:
@@ -61,11 +30,59 @@ class Processor:
             config=self._config,
         )
 
+    def _process_lot_end_file(
+        self,
+        file_path: Path,
+        output_path: str,
+    ):
+        if not file_path.exists() or not file_path.suffix == ".trf":
+            return False
+
+        with open(file_path, "r") as f:
+            raw_content = f.readlines()
+
+        for line in raw_content:
+            if line.lstrip().lower().startswith("inspectionstationid"):
+                inspection_station_id = line.split(";")[0].split(" ")
+                inspection_station_id = [id.strip('"') for id in inspection_station_id]
+                inspection_station_id = inspection_station_id[1:4]
+
+                output_path = output_path.format(
+                    **{"loader_name": inspection_station_id[-1]}
+                )
+
+        try:
+            dest = Path(output_path) / file_path.name
+
+            file.move(
+                src=file_path,
+                dest=dest,
+            )
+
+            self._logger.info(
+                f"{file_path.name=} was successfully moved to {output_path}."
+            )
+        except Exception as ex:
+            if file_path.exists():
+                file.move(
+                    src=file_path,
+                    dest=Path(self._config.directories.error) / file_path.name,
+                )
+
+            message_error = mailing.send_mail_error(
+                file=file_path,
+                error_path=self._config.directories.error,
+                config=self._config.mailing,
+            )
+
+            self._logger.critical(msg=message_error, exc_info=ex)
+
+        return True
+
     def process_file(self, file_path: Path):
-        lot_end_moved = process_lot_end_file(
+        lot_end_moved = self._process_lot_end_file(
             file_path=Path(file_path),
             output_path=self._config.directories.output,
-            logger=self._logger,
         )
 
         if not lot_end_moved:

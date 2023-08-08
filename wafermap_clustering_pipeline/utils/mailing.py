@@ -25,9 +25,12 @@ def send_mail(
 
 
 def send_mail_error(
-    klarf: str, error_path: str, config: MailingConfig, logger: Logger = None
+    file: str,
+    error_path: str,
+    config: MailingConfig,
+    logger: Logger = None,
 ) -> str:
-    message_error = f"{klarf=} processing failed, moved to {error_path}"
+    message_error = f"{file=} processing failed, moved to {error_path}"
 
     html = f"""\
         <html>
@@ -43,7 +46,7 @@ def send_mail_error(
             port=config.port,
             sender=config.sender,
             receiver=config.receiver,
-            subject=f"Clustering - Error on {klarf}",
+            subject=f"Clustering - Error on {file}",
             msg_html=html,
         )
     except Exception as ex:

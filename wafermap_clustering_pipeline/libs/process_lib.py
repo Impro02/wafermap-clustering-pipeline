@@ -90,7 +90,7 @@ class Process:
                 )
 
             message_error = mailing.send_mail_error(
-                klarf=klarf_name,
+                file=klarf_name,
                 error_path=self.config.directories.error,
                 config=self.config.mailing,
             )
