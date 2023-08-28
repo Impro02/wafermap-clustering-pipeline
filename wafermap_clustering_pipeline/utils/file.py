@@ -49,7 +49,7 @@ def get_files(
 
 
 def move(src: str, dest: str):
-    shutil.move(
+    return shutil.move(
         src=src,
         dst=dest,
     )

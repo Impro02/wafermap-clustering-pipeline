@@ -2,7 +2,7 @@
     "project_name": "wafermap-clustering-pipeline",
     "directories": {
         "logs": "{{root}}/logs",
-        "tmp": "{{root}}/tmp",
+        "tmp": "{{root}}/process/tmp",
         "input": "{{root}}/process/in",
         "output": "{{root}}/process/out",
         "error": "{{root}}/process/error",
