@@ -22,10 +22,17 @@ def file_processor(
     input_queue: multiprocessing.JoinableQueue,
     archive_path: str,
 ):
+    logger = setup_logger(
+        name="file_processor",
+        directory=Path(CONFIGS.directories.logs),
+    )
+
     while True:
         input_file_path: Path = input_queue.get()
         if input_file_path is None:
             break
+
+        logger.info(f"{input_file_path} is processing...")
 
         file.copy(
             input_file_path,
@@ -33,6 +40,8 @@ def file_processor(
         )
 
         process.process_klarf(Path(input_file_path))
+
+        logger.info(f"{input_file_path} process ended...")
 
         input_queue.task_done()
 
