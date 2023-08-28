@@ -56,7 +56,7 @@ def move(src: str, dest: str):
 
 
 def copy(src: str, dest: str):
-    shutil.copy(
+    return shutil.copy(
         src=src,
         dst=dest,
     )

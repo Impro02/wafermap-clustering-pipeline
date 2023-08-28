@@ -20,7 +20,6 @@ from .configs.logging import setup_logger
 def file_processor(
     process: Process,
     input_queue: multiprocessing.JoinableQueue,
-    archive_path: str,
 ):
     logger = setup_logger(
         name="file_processor",
@@ -33,11 +32,6 @@ def file_processor(
             break
 
         logger.info(f"{input_file_path} is processing...")
-
-        file.copy(
-            input_file_path,
-            Path(archive_path) / input_file_path.name,
-        )
 
         process.process_klarf(Path(input_file_path))
 
@@ -75,7 +69,7 @@ if __name__ == "__main__":
     for _ in range(CONFIGS.multi_processing.max_workers):
         p = multiprocessing.Process(
             target=file_processor,
-            args=(process, input_queue, CONFIGS.directories.archive),
+            args=(process, input_queue),
         )
         p.start()
         processes.append(p)
