@@ -76,6 +76,8 @@ if __name__ == "__main__":
             new_files = [
                 f for f in Path(CONFIGS.directories.input).iterdir() if f.is_file()
             ]
+
+            LOGGER.info(f"{len(new_files)} file(s) to process...")
             for new_file in new_files:
                 new_file = file.move(new_file, CONFIGS.directories.tmp)
                 input_queue.put(Path(new_file))
