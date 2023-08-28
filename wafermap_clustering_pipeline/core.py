@@ -79,8 +79,18 @@ if __name__ == "__main__":
 
             LOGGER.info(f"{len(new_files)} file(s) to process...")
             for new_file in new_files:
-                new_file = file.move(new_file, CONFIGS.directories.tmp)
-                input_queue.put(Path(new_file))
+                try:
+                    file.check_file_size(
+                        new_file,
+                        timeout=CONFIGS.time_out,
+                    )
+                    new_file = file.move(new_file, CONFIGS.directories.tmp)
+                    input_queue.put(Path(new_file))
+                except TimeoutError as ex:
+                    LOGGER.warning(
+                        msg=f"Timeout exceeded while cheking size of {new_file}",
+                        exc_info=ex,
+                    )
 
             time.sleep(CONFIGS.interval)
 
